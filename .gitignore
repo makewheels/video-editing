@@ -2,7 +2,6 @@
 .env
 .env.*
 !.env.example
-.codex/
 auth.json
 data/
 uploads/
@@ -19,3 +18,13 @@ work/
 __pycache__/
 .venv/
 node_modules/
+
+# Local build and inspection artifacts
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+*.report.json
+*.provenance.json
+dist/
+build/
+.DS_Store
