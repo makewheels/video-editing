@@ -27,6 +27,7 @@
 - [部署与数据归属建议](docs/architecture.md)
 - [开源项目与 Codex 调研](docs/research.md)
 - [下一步与交接清单](docs/next-steps.md)
+- [完整覆盖素材的游泳剪辑提示词](prompts/swimming-full-coverage.md)
 
 ## 当前状态
 
