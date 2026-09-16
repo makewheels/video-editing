@@ -1,0 +1,21 @@
+# Credentials and local runtime data
+.env
+.env.*
+!.env.example
+.codex/
+auth.json
+data/
+uploads/
+output/
+work/
+*.db
+*.sqlite
+*.sqlite3
+*.mp4
+*.mov
+*.mkv
+*.wav
+*.mp3
+__pycache__/
+.venv/
+node_modules/
