@@ -1,41 +1,48 @@
-# 开源项目与 Codex 调研
+# 开源项目调研与实测
 
-调研日期：2026-09-16。以下基于仓库和官方文档，未安装或实测，不构成可用性保证。
+更新：2026-09-16。源码/文档描述、实际运行和产品验收是三种不同证据。
 
-## 优先候选
+## 本次选择：先把 vedit 作为验证引擎
 
-| 项目 | 文档描述的能力 | 评估重点 |
+优先复用 [vedit / editorvideo-ai](https://github.com/metiu1/editorvideo-ai)，本仓库锁定提交 `2d1247887ad1f4461ba01b92a8afc2209fdd212e`。选择原因是它已有工程、时间线、转场、音频与 FFmpeg 编译能力；本仓库只增加方案协议、语义约束和兼容适配，不重写 NLE 内核。
+
+这是验证层的选择，**不表示已经选定或改好手机产品底座**。当前没有运行其内置聊天，也没有绑定上游的模型 API。
+
+| 检查 | 2026-09-16 结果 | 对实施的影响 |
 | --- | --- | --- |
-| [vedit / editorvideo-ai](https://github.com/metiu1/editorvideo-ai) | 网页时间线、工程保存、FFmpeg 渲染、CLI/MCP，Codex 可调用，MIT | 优先验证真实素材剪辑、服务端渲染、工程重开和手机适配；不能因功能表完整就假设成熟 |
-| [AI Video Editor](https://github.com/MartinDelophy/ai-video-editor) | 网页编辑、可保存时间线、字幕音轨、Codex 技能、浏览器导出 | 检查能否将渲染留在服务器，避免手机承担主要计算 |
-| [Video Edit CLI](https://github.com/computerlovetech/video-edit-cli) | Agent 技能、素材分析、剪辑计划、字幕、音频和导出，MIT | 适合作为服务器执行底座；手机页面和任务管理需要补充 |
+| README 中 `vedit-mcp` PyPI 安装 | PyPI JSON 包地址返回 HTTP 404 | 不能照抄该安装命令；改用固定 Git 提交和 uv.lock |
+| Git 安装、CLI 帮助、doctor | 本机可运行 | 只证明安装及基本探测可用 |
+| 上游直接渲染 + 本机 FFmpeg 9.0 | `filter_complex_script` 参数无法识别 | 本仓库在需要时改用 `-/filter_complex` 文件参数，旧版本仍用原参数 |
+| 上游文字渲染 + 本机 FFmpeg | 缺少 `drawtext` | 本仓库使用 Pillow 透明 PNG 叠加；不修改全局 FFmpeg |
+| 本仓库合成素材演示 | 两素材、中文字幕、溶解转场、下一段预告、静音 MP4，4.4 秒；完整解码通过 | 引擎调用链已实际跑通；不是动作识别或手机平台完成 |
+| 原生工程保存/重新打开 | 适配器在每次渲染前执行并重新编译 | 持久权威数据仍是本仓库通用方案；临时图片每次重新生成 |
+| 音轨与异常场景 | 由真实 FFmpeg 集成测试验证 | 测试结果以当前 CI/本地输出为准 |
+| 两条现有视频素材 | 只读加载并按合成测试方案做 4.4 秒渲染，技术检查通过，派生视频已清理 | 仅检查真实编码/尺寸兼容，不是游泳动作分类或新样片验收 |
+| 服务器与手机 | 尚未部署、未真机验证 | 不能把 Mac 成功等同于产品上线 |
 
-建议先验证 vedit；底座尚未最终选定。采用代码时保留上游许可证和署名要求，检查依赖许可证。
+上游 [许可证](https://github.com/metiu1/editorvideo-ai/blob/2d1247887ad1f4461ba01b92a8afc2209fdd212e/LICENSE) 为 MIT；保留依赖许可证，采用或修改源码时保留相应署名。不同 FFmpeg 构建及可选模型的许可须独立核实。
 
-## 其它参考
+## 另外两个候选
 
-- [CutAI](https://github.com/mindsurf0176/cutai)：EDITSTYLE.md 风格文件、计划与对话剪辑；项目自述 alpha，可借鉴规则表达。
-- [Auto-Editor](https://github.com/WyattBlue/auto-editor)：基于音量等信号的自动裁切；不能直接解决泳姿语义分类。
-- [OpenCut](https://github.com/OpenCut-app/OpenCut)：开源网页编辑器候选，尚未深入核对服务器执行路径。
-- [Multica](https://github.com/multica-ai/multica)：Agent 任务与协作管理，不是剪辑工程数据库，也不是第一期必需依赖。
-- Copyparty、File Browser、Uppy/tusd 曾作为文件上传下载备选调研；既有 video-2022 可复用，暂不计划额外部署网盘。
+| 项目 | 核实到的能力或限制 | 本次结论 |
+| --- | --- | --- |
+| [Video Edit CLI](https://github.com/computerlovetech/video-edit-cli) | `video-edit-cli==0.1.2` 安装、CLI 帮助、doctor 可运行；编辑方案校验源码限制同一素材片段不能逆序重排 | 很适合原子探测/转写/剪口检查；通用教学重组需额外适配。未宣称已做完整渲染或手机验证 |
+| [Timeline Studio](https://github.com/MartinDelophy/ai-video-editor) | 当前 README 描述浏览器 WebGPU/WASM 推理、WebCodecs 导出和可编辑时间线 | 可参考交互；主要计算在浏览器，不直接满足服务器渲染目标。本次没有安装运行 |
 
-## Codex 订阅约束
+没有仅凭功能表宣布任一候选可直接上线。后续评测使用同一批素材与同一验收表，记录质量、失败恢复、工程可重开性、手机成本和服务器耗时。
 
-用户没有模型 API Key。此前“直接调用 GPT-6 API”的建议已被纠正，不作为实施前提。
+## 订阅执行器约束
 
-官方资料：
+用户只有现有编程助手订阅，没有另购模型 API 凭证。候选路线是在用户自己的服务器运行已有订阅支持的官方非交互客户端，由执行器读取独立任务包并输出结构化计划。用户登录、模型权限、视觉输入、额度和长期后台运行能力都要实测。
 
-- [Authentication](https://learn.chatgpt.com/docs/auth)：支持 ChatGPT 登录及远程环境设备码登录；官方对程序化工作流推荐 API 认证。
-- [Non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode)：codex exec 可用于脚本执行。
-- [GPT-6 Astra guidance](https://developers.openai.com/api/docs/guides/latest-model)：模型能力背景，不代表用户拥有对应 API 使用权。
+参考官方 [认证说明](https://learn.chatgpt.com/docs/auth) 与 [非交互运行说明](https://learn.chatgpt.com/docs/non-interactive-mode)。这里只保留调研入口，没有把订阅等同于通用 API，也没有提取登录令牌冒充 API Key。新的后台任务不依赖旧聊天 ID；恢复靠工程文件和版本。
 
-候选路线为用户自己的服务器运行官方 Codex，驱动开源剪辑工具，手机通过私人入口提交任务。需要实测账号可用性、模型权限、额度及执行方式；不能将订阅等同于可对外提供的通用 API 服务，不提取登录令牌冒充 API Key。
+## 先前样片的教训
 
-## 本次已有证据
+- 先前成片约 120.15 秒、720×1280、H.264/AAC，只证明技术上能输出。
+- 用户指出出发技巧与泳姿混排、切换偏硬、原声与画面未必同步；本次将分类、连续证据、转场占用、字幕预告与声音模式纳入协议。
+- 字幕去除的涂抹会破坏画面，不作为默认处理。已有字幕先检测并审阅，再选择保留、重新排版或明确允许的区域覆盖。
+- 参考片可能包含独有环节，但“参考”不自动授权使用其镜头。默认阻止参考片进入成片，缺项必须报告。
+- 调度注册、程序退出码、文件存在、完整解码和语义审片分别记录，不能用前者代替后者。
 
-- Windows 素材目录有 10 条素材和 1 条参考视频。
-- Mac 下载目录发现当天游泳成片，ffprobe 显示约 120.15 秒、720×1280、H.264/AAC。
-- 通过抽帧观察标题和画面，发现泳姿、出发及其它技能混排；没有完整听看，音画错位判断来自用户反馈。
-- video-2022 本地代码和文档已有上传、存储、转码、播放、原片下载链接及视频管理 Agent；本次未发现现有 Agent 中已有剪辑执行能力。
-- 没有执行手机保存相册验证，没有跑候选开源项目测试，没有部署服务。
+[完整工具链](toolchain.md) · [下一步](next-steps.md)

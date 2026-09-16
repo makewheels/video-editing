@@ -1,0 +1,395 @@
+{
+  "$defs": {
+    "Asset": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "path": {
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "role": {
+          "default": "source",
+          "enum": [
+            "source",
+            "reference",
+            "music",
+            "voiceover"
+          ],
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "path"
+      ],
+      "title": "Asset",
+      "type": "object"
+    },
+    "Audio": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "default": "mute",
+          "enum": [
+            "mute",
+            "source",
+            "music",
+            "voiceover"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "asset_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Asset Id"
+        },
+        "rights_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rights Note"
+        },
+        "gain_db": {
+          "default": -8,
+          "maximum": 6,
+          "minimum": -60,
+          "title": "Gain Db",
+          "type": "number"
+        }
+      },
+      "title": "Audio",
+      "type": "object"
+    },
+    "Clip": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "asset_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$",
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "content_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$",
+          "title": "Content Id",
+          "type": "string"
+        },
+        "source_in": {
+          "minimum": 0,
+          "title": "Source In",
+          "type": "number"
+        },
+        "source_out": {
+          "minimum": 0,
+          "title": "Source Out",
+          "type": "number"
+        },
+        "transition_out": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Transition Out",
+          "type": "number"
+        },
+        "caption_position": {
+          "default": "top",
+          "enum": [
+            "top",
+            "bottom"
+          ],
+          "title": "Caption Position",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "asset_id",
+        "content_id",
+        "source_in",
+        "source_out",
+        "reason"
+      ],
+      "title": "Clip",
+      "type": "object"
+    },
+    "Content": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 40,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "stroke",
+            "start",
+            "turn",
+            "drill",
+            "water_skill",
+            "other"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "confirmed",
+            "uncertain"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "category",
+        "status",
+        "evidence"
+      ],
+      "title": "Content",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$",
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "number"
+        },
+        "end": {
+          "minimum": 0,
+          "title": "End",
+          "type": "number"
+        },
+        "modality": {
+          "enum": [
+            "continuous_visual",
+            "asr",
+            "ocr"
+          ],
+          "title": "Modality",
+          "type": "string"
+        },
+        "note": {
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_id",
+        "start",
+        "end",
+        "modality",
+        "note"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "Output": {
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "default": 720,
+          "maximum": 3840,
+          "minimum": 64,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "default": 1280,
+          "maximum": 3840,
+          "minimum": 64,
+          "title": "Height",
+          "type": "integer"
+        },
+        "fps": {
+          "default": 30,
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Fps",
+          "type": "integer"
+        },
+        "target_seconds": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Seconds"
+        },
+        "tolerance_seconds": {
+          "default": 1,
+          "minimum": 0,
+          "title": "Tolerance Seconds",
+          "type": "number"
+        },
+        "next_label_seconds": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Next Label Seconds",
+          "type": "number"
+        }
+      },
+      "title": "Output",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "parent_version": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Version"
+    },
+    "assets": {
+      "items": {
+        "$ref": "#/$defs/Asset"
+      },
+      "minItems": 1,
+      "title": "Assets",
+      "type": "array"
+    },
+    "contents": {
+      "items": {
+        "$ref": "#/$defs/Content"
+      },
+      "minItems": 1,
+      "title": "Contents",
+      "type": "array"
+    },
+    "clips": {
+      "items": {
+        "$ref": "#/$defs/Clip"
+      },
+      "minItems": 1,
+      "title": "Clips",
+      "type": "array"
+    },
+    "audio": {
+      "$ref": "#/$defs/Audio"
+    },
+    "output": {
+      "$ref": "#/$defs/Output"
+    },
+    "allow_reference_footage": {
+      "default": false,
+      "title": "Allow Reference Footage",
+      "type": "boolean"
+    },
+    "reference_use_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reference Use Reason"
+    },
+    "rules_snapshot": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Rules Snapshot",
+      "type": "object"
+    }
+  },
+  "required": [
+    "project_id",
+    "assets",
+    "contents",
+    "clips"
+  ],
+  "title": "Plan",
+  "type": "object"
+}
