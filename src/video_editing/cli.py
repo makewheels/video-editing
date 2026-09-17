@@ -53,6 +53,20 @@ def parser():
     run = sub.add_parser("demo", help="真实渲染合成素材；不需要 API 或私人视频")
     run.add_argument("--output", type=Path, help="省略时检查后自动删除所有演示文件")
     run.add_argument("--font")
+    run.add_argument("--simple", action="store_true", help="单行透明底名称，无预告和叠化")
+    upload = sub.add_parser("deliver", help="复用 video-cli 登录，上传并验证在线播放")
+    upload.add_argument("input", type=Path)
+    upload.add_argument("--receipt", required=True, type=Path)
+    upload.add_argument("--title", required=True)
+    upload.add_argument("--profile", default="prod")
+    upload.add_argument("--visibility", choices=("UNLISTED", "PRIVATE", "PUBLIC"),
+                        default="UNLISTED")
+    upload.add_argument("--wait-seconds", type=float, default=300)
+    delivery_check = sub.add_parser("check-delivery", help="只读检查已上传视频与 HLS 首尾分片")
+    delivery_check.add_argument("--video-id", required=True)
+    delivery_check.add_argument("--watch-id", required=True)
+    delivery_check.add_argument("--profile", default="prod")
+    delivery_check.add_argument("--expected-seconds", type=float)
     return p
 
 
@@ -64,7 +78,17 @@ def execute(args) -> dict:
     if args.command == "schema":
         return Plan.model_json_schema()
     if args.command == "demo":
-        return demo(args.output, args.font)
+        return demo(args.output, args.font, args.simple)
+    if args.command in ("deliver", "check-delivery"):
+        from .delivery import Video2022, check_delivery, deliver
+
+        if args.command == "check-delivery":
+            return check_delivery(Video2022(args.profile), args.video_id, args.watch_id,
+                                  args.expected_seconds)
+        if args.wait_seconds < 0:
+            raise ValueError("wait-seconds 不能为负数")
+        return deliver(args.input, args.receipt, args.title, args.profile, args.visibility,
+                       args.wait_seconds)
     plan = Plan.model_validate_json(args.plan.read_text(encoding="utf-8"))
     if args.command == "validate":
         return validate_plan(plan, args.asset_root)

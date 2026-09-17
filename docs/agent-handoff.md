@@ -2,14 +2,14 @@
 
 ## 编码 agent：干净环境启动
 
-需要 Git、Python 3.11–3.14、uv、系统 FFmpeg/ffprobe、中文字体。Linux 建议先验证 Ubuntu 24.04；macOS 可用于开发；Windows 优先 WSL，原生 Windows 暂无端到端证据。
+需要 Git、Python 3.11–3.14、uv、系统 FFmpeg/ffprobe、中文字体。Linux 建议先验证 Ubuntu 24.04；macOS 可用于开发；原生 Windows 已完成实际渲染和平台上传验证；无符号链接权限时仅跳过相关用例，并明确报告。
 
 ```sh
 git clone https://github.com/makewheels/video-editing.git
 cd video-editing
 uv sync --locked
 uv run editing doctor
-uv run editing demo
+uv run editing demo --simple
 uv run ruff check --no-cache .
 uv run pytest
 ```
@@ -19,7 +19,7 @@ Linux 缺系统依赖时安装 `ffmpeg` 和 `fonts-noto-cjk`。已有 FFmpeg 不
 `demo` 真正生成两条视频，创建方案，调用 vedit 编译及 FFmpeg 渲染，检查时长、画面规格、静音和完整解码。默认所有演示文件自动清理；需要查看成片时明确给出持久输出路径：
 
 ```sh
-uv run editing demo --output /你选择的交付目录/demo.mp4
+uv run editing demo --simple --output /你选择的交付目录/demo.mp4
 ```
 
 输出包括视频和 `.report.json`。合成源文件会清理；重现演示重新执行同一命令。这个演示没有执行 AI 理解，不是产品已完成的证明。
@@ -30,7 +30,7 @@ uv run editing demo --output /你选择的交付目录/demo.mp4
 2. 对所有素材执行 `inspect`，再按需要生成代理、场景边界和连续短预览。联系表只用于定位，不能仅凭一帧确认完整动作。
 3. 列出 `contents`：每种独有内容、类别、确认状态和证据区间。同一内容可以有多个候选区间；独有角度或教学要点单独列项。
 4. 写入 `Plan`。连续画面证据的区间表示要完整保留的动作周期；ASR、OCR 仅作辅助证据。先解决 `uncertain` 项，不能伪造已确认状态以绕过校验。
-5. 按相关内容组织片段，在动作周期外安排转场和字幕预告。标签语义对应当前画面；预告必须带“接下来”字样。
+5. 按相关内容组织片段，保留完整动作周期，同类动作连续展示、固定名称。当前推荐无预告、无黑底、无叠化。
 6. `validate` 成功后再 `render`，交付前复核所有独有内容和剪辑边界。
 
 ```sh
@@ -40,7 +40,7 @@ uv run editing validate /工程目录/plan.json --asset-root /素材根目录
 uv run editing render /工程目录/plan.json --asset-root /素材根目录 --output /交付目录/v1.mp4
 ```
 
-`examples/plan.json` 是完整结构示例，可对照 `schemas/edit-plan.schema.json` 编写。素材路径相对 `--asset-root`；禁止绝对路径、外部 URL 和逃逸根目录的符号链接。服务端将视频 ID 下载到受限任务目录后再调用这套协议，不直接把用户提交的下载地址交给 FFmpeg。
+`examples/simple-plan.json` 是当前推荐模板，`examples/plan.json` 保留作旧功能回归示例，可对照 `schemas/edit-plan.schema.json` 编写。素材路径相对 `--asset-root`；禁止绝对路径、外部 URL 和逃逸根目录的符号链接。服务端将视频 ID 下载到受限任务目录后再调用这套协议，不直接把用户提交的下载地址交给 FFmpeg。
 
 ## 输入和结果
 
@@ -55,7 +55,7 @@ uv run editing render /工程目录/plan.json --asset-root /素材根目录 --ou
 | 输出 | MP4 + 报告，覆盖表包含源时间与成片时间、类别、素材散列、规则快照和引擎版本 |
 | 完成标志 | 技术检查通过只代表文件正确；报告的语义、视觉审核仍为 `pending`，不能自动改成通过 |
 
-字幕按内容类别显示，出发技巧不会被计入泳姿。工具不会自动纠正一个被错误分类的动作；这仍需语义审核。
+分类记录在方案中，简洁字幕只显示名称；出发技巧不会被计入泳姿。工具不会自动纠正一个被错误分类的动作；这仍需语义审核。
 
 ## 失败与交接
 
@@ -70,3 +70,5 @@ uv run editing schema > schemas/edit-plan.schema.json
 ```
 
 增加能力时遵循 `inspect → plan → validate → render → verify → review`。模型负责证据和决策；工具执行可检查的方案。不要为每个模型维护一套剪辑实现。
+
+获得上传授权后，继续按 [交付手册](delivery.md) 执行 `deliver` / `check-delivery`，交付播放链接。反馈自动同步提示词及相关实现；手机全自助功能暂缓。

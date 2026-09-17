@@ -291,6 +291,24 @@
           "minimum": 0,
           "title": "Next Label Seconds",
           "type": "number"
+        },
+        "caption_style": {
+          "default": "card",
+          "enum": [
+            "card",
+            "plain"
+          ],
+          "title": "Caption Style",
+          "type": "string"
+        },
+        "encoding_profile": {
+          "default": "high_quality",
+          "enum": [
+            "high_quality",
+            "compact"
+          ],
+          "title": "Encoding Profile",
+          "type": "string"
         }
       },
       "title": "Output",

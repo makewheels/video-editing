@@ -1148,6 +1148,11 @@ dependencies = [
     { name = "vedit-mcp" },
 ]
 
+[package.optional-dependencies]
+delivery = [
+    { name = "truststore" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
@@ -1158,8 +1163,10 @@ dev = [
 requires-dist = [
     { name = "pillow", specifier = ">=11,<13" },
     { name = "pydantic", specifier = ">=2.11,<3" },
+    { name = "truststore", marker = "extra == 'delivery'", specifier = ">=0.10,<1" },
     { name = "vedit-mcp", git = "https://github.com/metiu1/editorvideo-ai.git?rev=2d1247887ad1f4461ba01b92a8afc2209fdd212e" },
 ]
+provides-extras = ["delivery"]
 
 [package.metadata.requires-dev]
 dev = [

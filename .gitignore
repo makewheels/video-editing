@@ -25,6 +25,7 @@ node_modules/
 .ruff_cache/
 *.report.json
 *.provenance.json
+*.delivery.json
 dist/
 build/
 .DS_Store
