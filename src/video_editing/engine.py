@@ -38,6 +38,19 @@ def task_space():
 
 def title_card(path: Path, label: str, tag: str, plan: Plan, font: Path, position: str):
     width, height = plan.output.width, plan.output.height
+    if plan.output.caption_style == "plain":
+        image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(image)
+        face = ImageFont.truetype(str(font), max(12, round(width * .05)))
+        stroke = max(1, round(width / 540))
+        if draw.textlength(label, font=face) + 2 * stroke > width * .9:
+            raise ValueError("单行动作名称过长，请精简文字，不自动换行或缩小字幕")
+        top = position == "top"
+        draw.text((width / 2, height * (.09 if top else .90)), label, font=face,
+                  anchor="mt" if top else "mb", fill="white", stroke_width=stroke,
+                  stroke_fill=(40, 40, 40, 210))
+        image.save(path)
+        return
     size = max(12, round(width / 16))
     large = ImageFont.truetype(str(font), size)
     small = ImageFont.truetype(str(font), max(10, round(size * .55)))
@@ -64,6 +77,33 @@ def title_card(path: Path, label: str, tag: str, plan: Plan, font: Path, positio
     image.save(path)
 
 
+def caption_spans(plan: Plan, coverage: list[dict]) -> list[dict]:
+    """Keep equal adjacent labels on screen continuously; previews remain opt-in."""
+    contents = {c.id: c for c in plan.contents}
+    spans = []
+
+    def append(start, end, label, tag, position):
+        style = {"label": label, "tag": tag, "position": position}
+        if spans and abs(spans[-1]["end"] - start) < 1e-6 and all(
+            spans[-1][key] == value for key, value in style.items()
+        ):
+            spans[-1]["end"] = end
+        else:
+            spans.append({"start": start, "end": end, **style})
+
+    for index, (clip, row) in enumerate(zip(plan.clips, coverage, strict=True)):
+        start, end = row["clear_output_range"]
+        advance = plan.output.next_label_seconds if index + 1 < len(plan.clips) else 0
+        content = contents[clip.content_id]
+        tag = CATEGORIES[content.category] if plan.output.caption_style == "card" else ""
+        append(start, end - advance, content.label, tag, clip.caption_position)
+        if advance:
+            following = contents[plan.clips[index + 1].content_id]
+            append(end - advance, row["output_range"][1], f"接下来：{following.label}",
+                   "下一段预告", clip.caption_position)
+    return spans
+
+
 def compile_project(plan: Plan, asset_root: Path, work: Path, font: Path, report: dict):
     # Import after assigning the per-task cache; never configure the operator's global tools.
     from vedit.model import Track
@@ -74,30 +114,20 @@ def compile_project(plan: Plan, asset_root: Path, work: Path, font: Path, report
     store.project.tracks.append(Track(id="V2", kind="video", name="动作名称"))
     media = {a.id: store.import_media([str(local_asset(asset_root, a.path))])[0]
              for a in plan.assets}
-    contents = {c.id: c for c in plan.contents}
-    for index, (clip, row) in enumerate(zip(plan.clips, report["coverage"], strict=True)):
+    for clip, row in zip(plan.clips, report["coverage"], strict=True):
         start, end = row["output_range"]
         native = store.add_clip(media[clip.asset_id].id, "V1", start,
                                 clip.source_in, clip.source_out - clip.source_in)
         store.set_audio(native.id, mute=plan.audio.mode != "source")
         if clip.transition_out:
             store.set_transition(native.id, "dissolve", clip.transition_out)
-        clear_start, clear_end = row["clear_output_range"]
-        has_next = index + 1 < len(plan.clips)
-        advance = plan.output.next_label_seconds if has_next else 0
-        content = contents[clip.content_id]
+    spans = caption_spans(plan, report["coverage"])
+    report["captions"] = spans
+    for index, span in enumerate(spans):
         card = work / f"label-{index}.png"
-        title_card(card, content.label, CATEGORIES[content.category], plan, font,
-                   clip.caption_position)
+        title_card(card, span["label"], span["tag"], plan, font, span["position"])
         image = store.import_media([str(card)])[0]
-        store.add_clip(image.id, "V2", clear_start, 0, clear_end - clear_start - advance)
-        if advance:
-            following = contents[plan.clips[index + 1].content_id]
-            card = work / f"next-{index}.png"
-            title_card(card, f"接下来：{following.label}", "下一段预告", plan, font,
-                       clip.caption_position)
-            image = store.import_media([str(card)])[0]
-            store.add_clip(image.id, "V2", clear_end - advance, 0, end - clear_end + advance)
+        store.add_clip(image.id, "V2", span["start"], 0, span["end"] - span["start"])
     if plan.audio.mode in ("music", "voiceover"):
         native = store.add_clip(media[plan.audio.asset_id].id, "A1", 0, 0,
                                 report["duration_seconds"])
@@ -112,6 +142,17 @@ def compatible_command(argv: list[str]) -> list[str]:
     help_text = command(["ffmpeg", "-hide_banner", "-h", "full"]).stdout
     if "-filter_complex_script" not in help_text:
         return ["-/filter_complex" if x == "-filter_complex_script" else x for x in argv]
+    return argv
+
+
+def encoding_command(argv: list[str], profile: str) -> list[str]:
+    argv = list(argv)
+    if profile == "compact":
+        if argv[argv.index("-c:v") + 1] != "libx264":
+            raise ValueError("compact 编码配置目前只验证过 libx264")
+        argv[argv.index("-preset") + 1] = "fast"
+        argv[argv.index("-crf") + 1] = "23"
+        argv[-1:-1] = ["-maxrate", "8M", "-bufsize", "16M"]
     return argv
 
 
@@ -169,7 +210,8 @@ def render_plan(plan: Plan, asset_root: Path, output: Path, font: str | None = N
         argv, duration, warnings, encoder = build_command(project, options, work)
         if abs(duration - report["duration_seconds"]) > 1e-4:
             raise ValueError("上游引擎编译后的时长发生变化")
-        command(compatible_command(argv), timeout)
+        argv = encoding_command(compatible_command(argv), plan.output.encoding_profile)
+        command(argv, timeout)
         verified = verify_output(staged, duration, plan.output.width, plan.output.height,
                                  plan.audio.mode, timeout, plan.output.fps)
         report.update({"schema_version": "1.0", "project_id": plan.project_id,

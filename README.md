@@ -1,8 +1,8 @@
 # Video Editing
 
-面向手机使用的个人 AI 视频剪辑平台：手机上传素材、描述要求、查看进度、预览和下载，计算在服务器完成。
+当前优先完成本地剪辑、按反馈修改、上传 video-2022 并交付手机播放链接。手机全自助平台暂缓。
 
-当前已从需求文档补到**可运行的开源引擎验证工作台**：素材探测 → 结构化方案 → 覆盖校验 → 中文字幕/转场/声音处理 → MP4 与质量报告。手机页面、服务器队列、订阅执行器和点播对接仍待实现，尚未部署。
+当前已从需求文档补到**可运行的开源引擎验证工作台**：素材探测 → 结构化方案 → 覆盖校验 → 中文字幕/转场/声音处理 → MP4 与质量报告。已有本地 video-2022 交付适配器；手机页面、服务器队列、订阅执行器仍未实现，剪辑平台尚未部署。
 
 ## 先运行，不需要模型 API 或 GPU
 
@@ -11,12 +11,12 @@
 ```sh
 uv sync --locked
 uv run editing doctor
-uv run editing demo
+uv run editing demo --simple
 uv run ruff check --no-cache .
 uv run pytest
 ```
 
-`demo` 使用自动生成的合成素材，实际调用 vedit 和 FFmpeg，检查 MP4 后自动清理临时文件。它不是 AI 动作理解测试。要保留可看的演示，使用 `uv run editing demo --output /交付目录/demo.mp4`。
+`demo` 使用自动生成的合成素材，实际调用 vedit 和 FFmpeg，检查 MP4 后自动清理临时文件。它不是 AI 动作理解测试。要保留可看的演示，使用 `uv run editing demo --simple --output /交付目录/demo.mp4`。
 
 首次安装固定 Git 提交的 vedit 和锁定依赖，需要网络。Python 依赖由 uv 共享缓存、硬链接复用；不下载大型识别模型、不读取模型登录状态、不调用付费 API。
 
@@ -32,7 +32,7 @@ uv run pytest
 - 按泳姿、出发、转身、辅助练习、水中技能分类；必需内容不能默默遗漏。
 - 原素材与参考片严格区分；以连续画面确认完整动作，ASR/OCR 只作辅助证据。
 - 自动计算重叠转场后的时长，禁止为了凑时长偷偷加速或截断已标记的完整动作区间。
-- 当前动作标签与“接下来”预告分开；原声、静音、音乐、旁白模式明确。
+- 推荐模板使用透明底单行名称，同名相邻片段共用字幕，无预告、无分类小字、无叠化；原声、静音、音乐、旁白模式明确。
 - 复用固定提交的 vedit；适配 FFmpeg 9 参数变化，使用 Pillow 叠加中文字幕，兼容缺少 drawtext/libass 的环境。
 - 输出技术检查与语义/观感审核分开。技术成功不会自动标记“所有动作正确”。
 
@@ -56,7 +56,17 @@ uv run pytest
 | [开源调研与实测](docs/research.md) | 固定版本、实际故障与验证边界 |
 | [开发交接](docs/agent-handoff.md) | 可直接执行的命令、输入输出与错误处理 |
 | [下一步清单](docs/next-steps.md) | 分阶段工作与具体退出条件 |
-| [游泳完整覆盖提示词](prompts/swimming-full-coverage.md) | 场景模板，不自动修改个人长期偏好 |
-| [方案示例](examples/plan.json) / [JSON Schema](schemas/edit-plan.schema.json) | 编码与剪辑 agent 共用的结构化协议 |
+| [游泳完整覆盖提示词](prompts/swimming-full-coverage.md) | 场景模板，明确反馈自动同步项目规则 |
+| [推荐简洁方案](examples/simple-plan.json) / [旧功能示例](examples/plan.json) / [JSON Schema](schemas/edit-plan.schema.json) | 编码与剪辑 agent 共用的结构化协议 |
 
 当前验证范围请看 `docs/research.md`。本地实现、自动测试、真实素材语义审核、部署和手机真机验收分别记录。
+
+## 最新反馈如何进入下一次剪辑
+
+明确的修改意见直接同步项目提示词、示例和必要代码，不等用户再次要求“记住”。最新的“一个一个展示、无预告、无黑底”替代早期字幕预告建议；蹬壁归出发技巧，分类保留在方案中。效果仍需用户确认，不能把技术检查通过当作满意。
+
+新方案从 `examples/simple-plan.json` 开始：`caption_style=plain`、`encoding_profile=compact`、`next_label_seconds=0`、`transition_out=0`。compact 使用 CPU libx264 fast / CRF 23 / maxrate 8M / bufsize 16M。旧方案缺省字段保留 card / high_quality，以免重新渲染时悄悄改变样式；旧示例用于功能回归，不代表当前审美默认值。
+
+使用 [剪辑与交付提示词](prompts/edit-and-deliver.md)，按 [交付手册](docs/delivery.md) 安装可选依赖并复用 video-cli 登录。上传需要用户授权；READY、播放列表和首尾分片解码都通过后才交付链接。命令验证不等于手机真机验收。
+
+[本次迭代与完成边界](docs/iteration-2026-09-17.md) 记录实际证据。推送或创建 PR 不代表获得合并授权。

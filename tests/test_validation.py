@@ -65,14 +65,28 @@ def test_short_external_track_is_not_looped(plan_data, validation_root):
         validate_plan(Plan.model_validate(plan_data), validation_root)
 
 
-def test_symlink_escape_and_absolute_paths_are_rejected(work):
+def test_traversal_absolute_paths_and_urls_are_rejected(work):
     inside = work / "inside"
     inside.mkdir()
     (work / "secret.txt").write_text("not media")
-    (inside / "link").symlink_to(work / "secret.txt")
-    for path in ("../secret.txt", "link", str(work / "secret.txt"), "https://example.com/a.mp4"):
+    for path in ("../secret.txt", str(work / "secret.txt"), "https://example.com/a.mp4"):
         with pytest.raises(ValueError):
             local_asset(inside, path)
+
+
+def test_symlink_escape_is_rejected(work):
+    inside = work / "inside"
+    inside.mkdir()
+    target = work / "secret.txt"
+    target.write_text("not media")
+    try:
+        (inside / "link").symlink_to(target)
+    except OSError as exc:
+        if getattr(exc, "winerror", None) == 1314:
+            pytest.skip("Windows 当前账号无创建符号链接权限；此用例未验证")
+        raise
+    with pytest.raises(ValueError):
+        local_asset(inside, "link")
 
 
 def test_generated_schema_matches_contract():

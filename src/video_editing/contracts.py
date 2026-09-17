@@ -81,6 +81,9 @@ class Output(Contract):
     target_seconds: float | None = Field(default=None, gt=0)
     tolerance_seconds: Seconds = 1
     next_label_seconds: Seconds = 0
+    # Missing fields preserve the appearance/encoding of older saved plans.
+    caption_style: Literal["card", "plain"] = "card"
+    encoding_profile: Literal["high_quality", "compact"] = "high_quality"
 
     @model_validator(mode="after")
     def even_dimensions(self):

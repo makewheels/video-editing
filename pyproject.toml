@@ -5,6 +5,10 @@ description = "可复现的素材检查、剪辑方案验证和开源引擎运�
 requires-python = ">=3.11,<3.15"
 dependencies = ["pydantic>=2.11,<3", "pillow>=11,<13", "vedit-mcp==0.1.0"]
 
+[project.optional-dependencies]
+# video-cli comes from the user's existing video-2022 checkout via uv --with.
+delivery = ["truststore>=0.10,<1"]
+
 [project.scripts]
 editing = "video_editing.cli:main"
 

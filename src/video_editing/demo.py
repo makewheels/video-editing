@@ -9,8 +9,8 @@ from .engine import render_plan
 from .media import command
 
 
-def example_plan() -> dict:
-    return {
+def example_plan(simple: bool = False) -> dict:
+    data = {
         "schema_version": "1.0", "project_id": "synthetic-demo", "version": 1,
         "assets": [{"id": "a", "path": "a.mp4"}, {"id": "b", "path": "b.mp4"}],
         "contents": [
@@ -32,6 +32,13 @@ def example_plan() -> dict:
                    "tolerance_seconds": .05, "next_label_seconds": .3},
         "rules_snapshot": {"scope": "合成素材测试；数值仅作演示，不是用户长期偏好"},
     }
+    if simple:
+        data["output"].update(caption_style="plain", encoding_profile="compact",
+                              next_label_seconds=0, target_seconds=4.8)
+        for clip in data["clips"]:
+            clip["transition_out"] = 0
+            clip["reason"] = "完整展示合成画面，检查固定名称与直接切换"
+    return data
 
 
 def make_sources(root: Path):
@@ -42,11 +49,11 @@ def make_sources(root: Path):
                  "-c:a", "aac", "-shortest", str(root / f"{name}.mp4")])
 
 
-def demo(output: Path | None, font: str | None = None) -> dict:
+def demo(output: Path | None, font: str | None = None, simple: bool = False) -> dict:
     with tempfile.TemporaryDirectory(prefix="editing-demo-") as directory:
         root = Path(directory)
         make_sources(root)
-        result = render_plan(Plan.model_validate(example_plan()), root,
+        result = render_plan(Plan.model_validate(example_plan(simple)), root,
                              output or root / "demo.mp4", font)
         if output is None:
             return {"ok": True, "duration_seconds": result["duration_seconds"],
@@ -55,6 +62,7 @@ def demo(output: Path | None, font: str | None = None) -> dict:
         # Persist only the explicitly requested artifact. Sources are synthetic and regenerated.
         report_path = Path(result["report"])
         report = json.loads(report_path.read_text(encoding="utf-8"))
-        report["reproduce"] = "uv run editing demo --output <新的成片路径>"
+        report["reproduce"] = ("uv run editing demo " + ("--simple " if simple else "")
+                               + "--output <新的成片路径>")
         report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         return result
