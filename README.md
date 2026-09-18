@@ -1,5 +1,7 @@
 # Video Editing
 
+> [2026-09-19账号增长报告](https://production-bucket.oss.aliyun.a4.fit/reports/temporary/swimming-account/20260919-071300/index.html)已发布：4类样本内容、3个教学账号对照、12个拍摄选题与可复制提示词。[阶段进度](docs/task-2026-09-19-account-growth.md)记录证据与未完成项。
+
 > 长期交付要求：每批素材用含日期时分秒的独立OSS目录；同批所有版本与每轮提示词调教记录都归档。见[存储位置与执行规则](docs/oss-archive.md)。点播交付不能替代剪辑OSS归档。
 
 > 2026-09-18 晚最新纠正：先梳理教学项目；序号按项目而非片段，合并重复深水探底，序号与名称同一行；底板待定。按视频类型、剪辑风格、专业术语三层整理提示词。今天只记录，下一次按[接续清单](docs/next-session-content-review.md)执行；此前v6规则与本条冲突时以本条为准。
