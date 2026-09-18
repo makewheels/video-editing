@@ -48,6 +48,7 @@ class Clip(Contract):
     source_in: Seconds
     source_out: Seconds
     transition_out: Seconds = 0
+    transition_style: Literal["dissolve", "wipe_left", "wipe_right", "slide_left", "slide_right"] = "dissolve"
     caption_position: Literal["top", "bottom"] = "top"
     reason: str = Field(min_length=1)
 
@@ -59,14 +60,16 @@ class Clip(Contract):
 
 
 class Audio(Contract):
-    mode: Literal["mute", "source", "music", "voiceover"] = "mute"
+    mode: Literal["mute", "source", "music", "voiceover", "mixed"] = "mute"
     asset_id: Identifier | None = None
     rights_note: str | None = None
     gain_db: float = Field(default=-8, ge=-60, le=6)
+    source_gain_db: float = Field(default=-18, ge=-60, le=6)
+    normalize_loudness: bool = False
 
     @model_validator(mode="after")
     def external_track(self):
-        if self.mode in ("music", "voiceover"):
+        if self.mode in ("music", "voiceover", "mixed"):
             if not self.asset_id or not self.rights_note or not self.rights_note.strip():
                 raise ValueError("配乐或旁白必须给出 asset_id 和可用来源说明 rights_note")
         elif self.asset_id is not None:
@@ -82,8 +85,10 @@ class Output(Contract):
     tolerance_seconds: Seconds = 1
     next_label_seconds: Seconds = 0
     # Missing fields preserve the appearance/encoding of older saved plans.
-    caption_style: Literal["card", "plain"] = "card"
+    caption_style: Literal["card", "plain", "badge"] = "card"
     encoding_profile: Literal["high_quality", "compact"] = "high_quality"
+    number_clips: bool = False
+    motion_style: Literal["none", "energetic"] = "none"
 
     @model_validator(mode="after")
     def even_dimensions(self):

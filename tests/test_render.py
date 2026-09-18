@@ -40,6 +40,27 @@ def test_source_audio_is_retained(real_media, work):
     assert probe(output)["has_audio"]
 
 
+def test_source_loudness_normalization_preserves_video(real_media, work):
+    from video_editing.engine import normalize_audio
+
+    source_root, plan = real_media
+    data = plan.model_dump()
+    data["audio"] = {"mode": "source", "normalize_loudness": True}
+    output = work / "clear-source.mp4"
+    render_plan(Plan.model_validate(data), source_root, output)
+    report = json.loads(output.with_suffix(".report.json").read_text())
+    assert report["audio_normalization"]["applied"]
+    assert report["plan"]["audio"]["mode"] == "source"
+    normalized = work / "renormalized.mp4"
+    measurement = normalize_audio(output, normalized)["input"]
+    assert -17 < float(measurement["input_i"]) < -15
+    assert float(measurement["input_tp"]) < -1
+    def video_hash(path):
+        return command(["ffmpeg", "-v", "error", "-i", str(path), "-map", "0:v:0",
+                        "-c", "copy", "-f", "hash", "-"]).stdout
+    assert video_hash(output) == video_hash(normalized)
+
+
 def test_music_replaces_instead_of_mixing_source_audio(real_media, work):
     import shutil
 
@@ -58,6 +79,28 @@ def test_music_replaces_instead_of_mixing_source_audio(real_media, work):
                                    "-f", "f32le", "-"])
     spectrum = abs(np.fft.rfft(np.frombuffer(pcm, dtype=np.float32)))
     assert spectrum[880] > spectrum[440] * 100
+
+
+def test_mixed_audio_contains_source_and_music(real_media, work):
+    import shutil
+
+    source_root, plan = real_media
+    for name in ("a.mp4", "b.mp4"):
+        shutil.copyfile(source_root / name, work / name)
+    command(["ffmpeg", "-v", "error", "-f", "lavfi", "-i",
+             "sine=frequency=880:duration=5", str(work / "tone.wav")])
+    data = plan.model_dump()
+    data["assets"].append({"id": "music", "path": "tone.wav", "role": "music"})
+    data["audio"] = {"mode": "mixed", "asset_id": "music", "rights_note": "自制测试音轨",
+                     "gain_db": -8, "source_gain_db": -18}
+    output = work / "mixed.mp4"
+    render_plan(Plan.model_validate(data), work, output)
+    pcm = subprocess.check_output(["ffmpeg", "-v", "error", "-ss", "1", "-i", str(output),
+                                   "-t", "1", "-vn", "-ac", "1", "-ar", "8000",
+                                   "-f", "f32le", "-"])
+    spectrum = abs(np.fft.rfft(np.frombuffer(pcm, dtype=np.float32)))
+    assert spectrum[440] > spectrum[500] * 100
+    assert 2 < spectrum[880] / spectrum[440] < 5
 
 
 def test_failed_render_does_not_publish_or_leave_workdir(real_media, work, monkeypatch):
