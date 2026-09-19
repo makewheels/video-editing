@@ -1,0 +1,16 @@
+[Unit]
+Description=Video editing HTTP connection
+After=network-online.target
+
+[Service]
+User=video-editing
+Group=video-editing
+ExecStart=/usr/bin/stunnel /opt/video-editing/egress.conf
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
