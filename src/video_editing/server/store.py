@@ -53,4 +53,3 @@ def signed(key, download=False):
     if download:
         params["response-content-disposition"] = "attachment; filename=swimming.mp4; filename*=UTF-8''" + quote("游泳剪辑.mp4")
     return bucket().sign_url("GET", key, 3600, params=params, slash_safe=True)
-
