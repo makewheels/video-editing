@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0",
+  "project_id": "synthetic-demo",
+  "version": 1,
+  "assets": [
+    {
+      "id": "a",
+      "path": "a.mp4"
+    },
+    {
+      "id": "b",
+      "path": "b.mp4"
+    },
+    {
+      "id": "music",
+      "path": "music.wav",
+      "role": "music"
+    }
+  ],
+  "contents": [
+    {
+      "id": "first",
+      "label": "测试画面一",
+      "category": "other",
+      "status": "confirmed",
+      "evidence": [
+        {
+          "asset_id": "a",
+          "start": 0.5,
+          "end": 1.5,
+          "modality": "continuous_visual",
+          "note": "合成色卡，不代表游泳识别"
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "label": "测试画面二",
+      "category": "other",
+      "status": "confirmed",
+      "evidence": [
+        {
+          "asset_id": "b",
+          "start": 0.5,
+          "end": 1.5,
+          "modality": "continuous_visual",
+          "note": "合成图案，仅检查真实渲染"
+        }
+      ]
+    }
+  ],
+  "clips": [
+    {
+      "id": "c1",
+      "asset_id": "a",
+      "content_id": "first",
+      "source_in": 0,
+      "source_out": 2.4,
+      "transition_out": 0.3,
+      "reason": "完整展示合成画面，检查固定名称与直接切换"
+    },
+    {
+      "id": "c2",
+      "asset_id": "b",
+      "content_id": "second",
+      "source_in": 0,
+      "source_out": 2.4,
+      "reason": "完整展示合成画面，检查固定名称与直接切换",
+      "transition_out": 0
+    }
+  ],
+  "audio": {
+    "mode": "mixed",
+    "asset_id": "music",
+    "rights_note": "运行前替换为实际授权说明；音轨至少4.5秒",
+    "gain_db": -12,
+    "source_gain_db": -22
+  },
+  "output": {
+    "width": 360,
+    "height": 640,
+    "fps": 25,
+    "target_seconds": 4.5,
+    "tolerance_seconds": 0.05,
+    "next_label_seconds": 0,
+    "caption_style": "badge",
+    "encoding_profile": "compact"
+  },
+  "rules_snapshot": {
+    "scope": "大字幕底板与音乐混原声示例；music.wav由使用者提供，不含私人素材。"
+  }
+}

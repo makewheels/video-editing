@@ -41,7 +41,8 @@
             "mute",
             "source",
             "music",
-            "voiceover"
+            "voiceover",
+            "mixed"
           ],
           "title": "Mode",
           "type": "string"
@@ -77,6 +78,18 @@
           "minimum": -60,
           "title": "Gain Db",
           "type": "number"
+        },
+        "source_gain_db": {
+          "default": -18,
+          "maximum": 6,
+          "minimum": -60,
+          "title": "Source Gain Db",
+          "type": "number"
+        },
+        "normalize_loudness": {
+          "default": false,
+          "title": "Normalize Loudness",
+          "type": "boolean"
         }
       },
       "title": "Audio",
@@ -115,6 +128,18 @@
           "minimum": 0,
           "title": "Transition Out",
           "type": "number"
+        },
+        "transition_style": {
+          "default": "dissolve",
+          "enum": [
+            "dissolve",
+            "wipe_left",
+            "wipe_right",
+            "slide_left",
+            "slide_right"
+          ],
+          "title": "Transition Style",
+          "type": "string"
         },
         "caption_position": {
           "default": "top",
@@ -296,7 +321,8 @@
           "default": "card",
           "enum": [
             "card",
-            "plain"
+            "plain",
+            "badge"
           ],
           "title": "Caption Style",
           "type": "string"
@@ -308,6 +334,20 @@
             "compact"
           ],
           "title": "Encoding Profile",
+          "type": "string"
+        },
+        "number_clips": {
+          "default": false,
+          "title": "Number Clips",
+          "type": "boolean"
+        },
+        "motion_style": {
+          "default": "none",
+          "enum": [
+            "none",
+            "energetic"
+          ],
+          "title": "Motion Style",
           "type": "string"
         }
       },

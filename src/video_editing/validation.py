@@ -69,13 +69,14 @@ def validate_plan(plan: Plan, asset_root: Path) -> dict:
     target = plan.output.target_seconds
     if target is not None and abs(position - target) > plan.output.tolerance_seconds + 1e-6:
         errors.append(f"计划 {position:.3f} 秒，与目标 {target} 秒冲突；不能自动删内容或加速")
-    if plan.audio.mode in ("music", "voiceover"):
+    if plan.audio.mode in ("music", "voiceover", "mixed"):
         key = plan.audio.asset_id
-        if key not in assets or assets[key].role != plan.audio.mode:
+        role = "music" if plan.audio.mode == "mixed" else plan.audio.mode
+        if key not in assets or assets[key].role != role:
             errors.append("音轨素材不存在或角色不符")
         elif not metadata[key]["has_audio"] or metadata[key]["duration"] < position - 0.02:
             errors.append("音轨缺失或比成片短；不能默默循环、拉伸旁白或留下静音尾部")
-    if plan.audio.mode == "source" and any(
+    if plan.audio.mode in ("source", "mixed") and any(
         not metadata[c.asset_id]["has_audio"] for c in plan.clips if c.asset_id in metadata
     ):
         errors.append("要求保留原声，但部分片段没有音轨")
