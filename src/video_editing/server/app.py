@@ -86,7 +86,24 @@ class ProjectInput(BaseModel):
 
 @app.get('/api/projects', dependencies=[Depends(owner)])
 def projects():
-    return list(db().projects.find({}, {'_id': 0}).sort('created_at', -1).limit(100))
+    rows = list(db().projects.find({}, {'_id': 0}).sort('created_at', -1).limit(100))
+    latest = {}
+    for job in db().jobs.find({'project_id': {'$in': [p['id'] for p in rows]}},
+            {'_id': 0, 'project_id': 1, 'state': 1, 'stage': 1, 'created_at': 1,
+             'mode': 1}).sort('created_at', -1):
+        latest.setdefault(job['project_id'], job)
+    labels = {'ready': '剪辑完成', 'running': '进行中', 'queued': '排队中', 'failed': '剪辑失败'}
+    for project in rows:
+        uploaded = max((a.get('created_at', '') for a in project['assets']), default='')
+        job = latest.get(project['id'])
+        state = job['state'] if job else ('pending' if project['assets'] else 'empty')
+        if (job and state == 'ready' and job.get('mode') != 'historical'
+                and uploaded > job.get('created_at', '')):
+            state = 'pending'
+        project.update(uploaded_at=uploaded or None, asset_count=len(project['assets']),
+                       status=state, status_label=labels.get(state,
+                       '待上传' if state == 'empty' else '待剪辑'))
+    return rows
 
 
 @app.post('/api/projects', dependencies=[Depends(owner)])
@@ -113,6 +130,15 @@ def project_detail(project_id: str):
     project = project_or_404(project_id)
     project['versions'] = list(db().jobs.find({'project_id': project_id},
         {'_id': 0, 'lease_token': 0}).sort('created_at', -1).limit(100))
+    from .progress import describe
+    history = list(db().jobs.find({'state': 'ready', 'mode': {'$in': ['smart', 'quick']}},
+        {'_id': 0, 'assets': 1, 'mode': 1, 'id': 1, 'created_at': 1,
+         'started_at': 1, 'updated_at': 1}).sort('updated_at', -1).limit(40))
+    queue = list(db().jobs.find({'state': {'$in': ['queued', 'running']}},
+                              {'_id': 0, 'id': 1, 'state': 1, 'created_at': 1}))
+    for version in project['versions']:
+        if version.get('mode') != 'historical':
+            version['progress'] = describe(version, history, queue)
     return project
 
 

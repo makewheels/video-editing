@@ -20,7 +20,8 @@ def claim():
         {"$or": [{"state": "queued"}, {"state": "running", "lease_until": {"$lt": clock}}],
          "attempts": {"$lt": 3}},
         {"$set": {"state": "running", "lease_until": clock + 120,
-                  "lease_token": uid(), "updated_at": now()}, "$inc": {"attempts": 1}},
+                  "lease_token": uid(), "updated_at": now(), "started_at": now(),
+                  "active_stage": "读取工程素材", "stage_events": []}, "$inc": {"attempts": 1}},
         sort=[("created_at", 1)], return_document=ReturnDocument.AFTER)
 
 
@@ -65,7 +66,8 @@ def execute(packet):
     job = json.loads(Path(packet).read_text())
     query = {"id": job["id"], "lease_token": job["lease_token"], "state": "running"}
     def progress(stage):
-        result = db().jobs.update_one(query, {"$set": {"stage": stage, "updated_at": now()}})
+        result = db().jobs.update_one(query, {"$set": {"stage": stage, "active_stage": stage, "updated_at": now()},
+            "$push": {"stage_events": {"stage": stage, "at": now()}}})
         if not result.matched_count:
             raise RuntimeError("任务租约已失效")
     try:
