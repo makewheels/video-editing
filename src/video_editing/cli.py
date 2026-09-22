@@ -54,6 +54,16 @@ def parser():
     run.add_argument("--output", type=Path, help="省略时检查后自动删除所有演示文件")
     run.add_argument("--font")
     run.add_argument("--simple", action="store_true", help="单行透明底名称，无预告和叠化")
+    gen = sub.add_parser("generate", help="调用 Seedance 生成素材；凭据从环境变量读取")
+    gen.add_argument("prompt", type=Path, help="提示词文本文件（UTF-8）")
+    gen.add_argument("--output", type=Path, help="成片保存路径")
+    gen.add_argument("--duration", type=int, default=10, help="秒，Seedance 2.5 支持 4-30")
+    gen.add_argument("--ratio", default="9:16", help="如 9:16、16:9、adaptive")
+    gen.add_argument("--resolution", default="720p", choices=("480p", "720p", "1080p"))
+    gen.add_argument("--audio", action="store_true", help="生成同步声音；默认静音")
+    gen.add_argument("--model")
+    gen.add_argument("--dry-run", action="store_true", help="只打印请求体与估算费用，不提交")
+    gen.add_argument("--timeout", type=float, default=1800)
     upload = sub.add_parser("deliver", help="复用 video-cli 登录，上传并验证在线播放")
     upload.add_argument("input", type=Path)
     upload.add_argument("--receipt", required=True, type=Path)
@@ -79,6 +89,26 @@ def execute(args) -> dict:
         return Plan.model_json_schema()
     if args.command == "demo":
         return demo(args.output, args.font, args.simple)
+    if args.command == "generate":
+        from .generation import MODEL, build_payload, estimate_cost, generate
+
+        prompt = args.prompt.resolve(strict=True).read_text(encoding="utf-8").strip()
+        if not prompt:
+            raise ValueError("提示词文件为空")
+        model = args.model or MODEL
+        if args.dry_run:
+            payload = build_payload(prompt, duration=args.duration, ratio=args.ratio,
+                                    resolution=args.resolution, audio=args.audio, model=model)
+            return {"payload": payload,
+                    "estimated_cost_yuan": estimate_cost(args.duration, args.resolution)}
+        if args.output is None:
+            raise ValueError("实际生成时必须提供 --output")
+        if args.timeout <= 0:
+            raise ValueError("timeout 必须大于 0")
+        return generate(prompt, args.output, duration=args.duration, ratio=args.ratio,
+                        resolution=args.resolution, audio=args.audio, model=model,
+                        timeout=args.timeout,
+                        on_status=lambda s: print(f"status={s}", file=sys.stderr, flush=True))
     if args.command in ("deliver", "check-delivery"):
         from .delivery import Video2022, check_delivery, deliver
 

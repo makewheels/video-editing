@@ -128,3 +128,17 @@ def test_animated_numbered_video_preserves_timing_and_audio(real_media, work):
                        if g > 140 and b > 130 and r < 100 and abs(g-b) < 70)
     assert pixels_at(.7) > pixels_at(0) + 20
     assert pixels_at(.7) > pixels_at(2.07) + 20
+
+
+def test_teaching_item_number_reused_across_clips(validation_root):
+    data = example_plan(simple=True)
+    data['output']['number_contents'] = True
+    data['output']['motion_style'] = 'energetic'
+    first_id = data['contents'][0]['id']
+    data['contents'][0]['evidence'].extend(data['contents'][1]['evidence'])
+    data['contents'] = data['contents'][:1]
+    data['clips'][1]['content_id'] = first_id
+    plan = Plan.model_validate(data)
+    spans = caption_spans(plan, validate_plan(plan, validation_root)['coverage'])
+    assert [s['label'] for s in spans] == ['01  测试画面一', '01  测试画面一']
+    assert all(s['sequence'] is None for s in spans)

@@ -8,6 +8,14 @@ dependencies = ["pydantic>=2.11,<3", "pillow>=11,<13", "vedit-mcp==0.1.0"]
 [project.optional-dependencies]
 # video-cli comes from the user's existing video-2022 checkout via uv --with.
 delivery = ["truststore>=0.10,<1"]
+server = [
+    "fastapi>=0.141.1",
+    "httpx>=0.28.1",
+    "oss2>=2.19.1",
+    "pymongo>=4.18.1",
+    "python-multipart>=0.0.32",
+    "uvicorn[standard]>=0.53.0",
+]
 
 [project.scripts]
 editing = "video_editing.cli:main"
@@ -26,7 +34,11 @@ link-mode = "hardlink"
 vedit-mcp = { git = "https://github.com/metiu1/editorvideo-ai.git", rev = "2d1247887ad1f4461ba01b92a8afc2209fdd212e" }
 
 [dependency-groups]
-dev = ["pytest>=8,<10", "ruff>=0.11,<1"]
+dev = [
+    "mongomock>=4.3.0",
+    "pytest>=8,<10",
+    "ruff>=0.11,<1",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

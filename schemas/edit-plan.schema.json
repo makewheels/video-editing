@@ -341,6 +341,11 @@
           "title": "Number Clips",
           "type": "boolean"
         },
+        "number_contents": {
+          "default": false,
+          "title": "Number Contents",
+          "type": "boolean"
+        },
         "motion_style": {
           "default": "none",
           "enum": [
