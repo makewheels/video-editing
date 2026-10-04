@@ -1,0 +1,27 @@
+[Unit]
+Description=Video editing background worker
+After=network-online.target editing-egress.service
+Wants=network-online.target
+
+[Service]
+User=video-editing
+Group=video-editing
+WorkingDirectory=/opt/video-editing/app
+EnvironmentFile=/opt/video-editing/runtime.env
+Environment=PATH=/opt/video-editing/app/.venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/opt/video-editing/app/.venv/bin/python -m video_editing.server.worker
+Restart=always
+RestartSec=10
+KillMode=control-group
+TimeoutStopSec=20
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/video-editing
+MemoryMax=3G
+CPUQuota=180%
+TasksMax=256
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

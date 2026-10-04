@@ -1,0 +1,166 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>游泳剪辑工作室</title>
+<style>
+:root{color-scheme:light;--ink:#183147;--muted:#668095;--blue:#087d91;--line:#dce8ed}*{box-sizing:border-box}body{margin:0;background:#f2f7f8;color:var(--ink);font:16px/1.6 system-ui,-apple-system,sans-serif}header{background:#123748;color:white;padding:30px 22px 24px}header>div,main{max-width:900px;margin:auto}header small{letter-spacing:.12em;color:#8cd9d8}h1{font-size:28px;margin:6px 0}h2{font-size:20px;margin:0 0 12px}p{margin:8px 0}main{padding:20px 16px 80px}.card{padding:22px;border:1px solid var(--line);border-radius:18px;background:white;margin-bottom:16px;box-shadow:0 3px 15px #1a415508}.muted,small{color:var(--muted)}button,.button{font:inherit;cursor:pointer;border:0;border-radius:11px;padding:12px 18px;background:var(--blue);color:white;display:inline-block;text-decoration:none;text-align:center}button:disabled{opacity:.5;cursor:wait}.secondary{background:#e8f2f4;color:var(--ink)}input,textarea,select{font:inherit;width:100%;padding:12px;border:1px solid #c7d7df;border-radius:10px;background:white;color:var(--ink);margin:6px 0 14px}textarea{min-height:105px}label{font-weight:600;font-size:14px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.project{display:block;width:100%;text-align:left;background:white;color:var(--ink);padding:18px;border:1px solid var(--line);margin:10px 0}.project strong{display:block;font-size:18px}.pill{font-size:12px;background:#e6f6f2;color:#147c69;border-radius:30px;padding:4px 10px}video{width:100%;max-height:65vh;background:#102836;border-radius:12px;margin:12px 0}progress{width:100%;height:10px;accent-color:var(--blue)}.error{color:#b43e33;background:#fff1ef;padding:12px;border-radius:10px}#notice{position:sticky;top:8px;z-index:2}ul{padding-left:20px;overflow-wrap:anywhere}details{margin:10px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.6 system-ui}footer{font-size:13px;color:var(--muted);margin-top:20px}.empty{padding:28px 0;text-align:center}[hidden]{display:none!important}@media(max-width:500px){.card{padding:17px}h1{font-size:25px}.row.stack{display:block}.row.stack>*{width:100%}}
+
+.bottom-tabs{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom));z-index:5;gap:5px}.bottom-tabs button{flex:1;background:transparent;color:var(--muted);font-size:14px;padding:10px 4px}.bottom-tabs .active{background:#e6f4f3;color:var(--blue);font-weight:700}main{padding-bottom:110px}.project-table{width:100%;border-collapse:collapse;table-layout:fixed;background:white;border-radius:12px;overflow:hidden}.project-table th{text-align:left;font-size:13px;color:var(--muted);padding:12px 10px;background:#eaf2f4}.project-table td{padding:14px 10px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13px}.project-table th:first-child{width:48%}.project-table th:nth-child(2){width:25%}.project-open{background:none;color:var(--ink);padding:0;text-align:left;font-size:16px;font-weight:650;overflow-wrap:anywhere;min-height:44px}.project-table small{display:block}.project-table .pill{display:inline-block;padding:4px 7px;white-space:nowrap}.pill.running,.pill.queued{background:#fff3cf;color:#886617}.pill.failed{background:#ffeae7;color:#af3c30}.steps{list-style:none;padding:0;margin:18px 0}.steps li{display:flex;gap:12px;position:relative;padding:0 0 18px}.steps li:not(:last-child):before{content:'';position:absolute;left:12px;top:26px;bottom:0;border-left:2px solid #dce8ed}.step-dot{flex:0 0 26px;height:26px;border-radius:50%;background:#eaf0f2;color:#718995;text-align:center;font-size:13px;line-height:26px}.steps .complete .step-dot{background:#dff4ed;color:#157f65}.steps .current .step-dot{background:var(--blue);color:white}.steps .failed .step-dot{background:#c24e3d;color:white}.steps .pending{color:#81939d}.steps small{display:block;font-size:12px}.steps .current strong{color:var(--blue)}.eta{background:#f0f7f8;padding:12px;border-radius:10px;font-size:14px}.phase-heading{font-size:14px;margin:14px 0 5px}
+</style>
+<header><div><small>SWIM · STUDIO</small><h1>把每一次进步，剪成作品</h1><p>上传素材 · 自动剪辑 · 保留每一版</p></div></header>
+<main><div id="notice" hidden></div><section id="login" class="card" hidden><h2>进入我的剪辑工作室</h2><p class="muted">私人素材仅在登录后可见。</p><form id="loginForm"><label>访问口令<input id="key" type="password" autocomplete="current-password" required></label><button>进入工作室</button></form></section>
+<section id="home" hidden><div class="row"><h2>我的工程</h2><button id="refresh" class="secondary" style="flex:0">刷新</button></div><p class="muted">查看素材上传时间、剪辑状态和历史版本。</p><div id="projects"></div></section>
+<section id="createPage" hidden><div class="card"><h2>新建剪辑工程</h2><form id="createForm"><label>工程名称<input id="title" placeholder="例如：小李的12节课成果" maxlength="100" required></label><button>创建工程并上传素材</button></form></div></section>
+<section id="detail" hidden><button id="back" class="secondary">← 全部工程</button><h2 id="projectTitle" style="margin:18px 0"></h2><div class="card"><h2>1. 添加素材</h2><p class="muted">选中视频后立即自动上传，支持多选，每条不超过2GB。上传期间请保持页面打开；开始剪辑后可以离开。</p><input id="files" type="file" accept="video/*,.mkv,.mov" multiple><button id="upload" class="secondary" hidden>重试未完成的上传</button><p id="uploadText" aria-live="polite"></p><progress id="uploadProgress" max="100" value="0" hidden></progress><details><summary id="assetCount">已有素材</summary><ul id="assets"></ul></details></div>
+<div class="card"><h2>2. 生成新版本</h2><p class="muted">已带入课程成果提示词：同项目去重、编号与名称同一行、专业术语复核。</p><form id="editForm"><div class="row stack"><label>剪辑方式<select id="mode"><option value="smart">智能剪辑 · 识别项目后编排</option><option value="quick">快速拼接 · 各取前5秒</option></select></label><label>声音<select id="audio"><option value="source">保留原声，不加配乐</option><option value="mute">静音</option></select></label><label>课次数（可空）<input id="lessons" type="number" min="1" max="100" placeholder="例如12"></label></div><label>这次怎么剪？<textarea id="feedback" maxlength="4000" placeholder="可以留空，沿用课程成果规则。也可以写：探底只留一次，开头先展示自由泳……"></textarea></label><button id="editButton" aria-describedby="editReason" disabled>开始剪辑</button><p id="editReason" class="muted" role="status" aria-live="polite">正在读取工程素材……</p><button id="syncAssets" type="button" class="secondary" hidden>刷新素材状态</button></form><small>每次生成独立版本，旧视频会一直保留。智能识别结果仍建议发布前检查。</small></div>
+<h2>3. 版本与剪辑进度</h2><div id="versions"></div><footer>下载会打开视频文件。iPhone 可在分享菜单保存到“文件”，再按系统选项保存视频；具体选项因浏览器而异。</footer></section></main><nav class="bottom-tabs" aria-label="页面导航"><button id="tabProjects" class="active">我的工程</button><button id="tabCreate">新建工程</button><button id="tabCurrent" disabled>当前工程</button></nav>
+<script>
+let current=null, pageName='home', operation=null, loaded=false, savedAssets=[], pendingFiles=[];
+let uploadPhase='', loadError='', refreshSerial=0;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function notice(s){$('notice').hidden=!s;$('notice').className='error';$('notice').textContent=s;}
+function updateControls(){
+  let reason='';
+  if(operation==='upload')reason=uploadPhase||'正在上传素材，请等待保存完成后再开始剪辑。';
+  else if(operation==='submit')reason='正在提交剪辑任务，请稍候。';
+  else if(!loaded)reason=loadError||'正在读取工程素材……';
+  else if(!savedAssets.length)reason=pendingFiles.length?'素材上传失败，请重试；还没有保存成功的视频。':'还没有素材。请选择视频，选中后会自动上传。';
+  else reason=`已保存 ${savedAssets.length} 条素材，可以开始剪辑。`+(pendingFiles.length?`另有 ${pendingFiles.length} 条未上传成功，不会加入本次剪辑。`:'')+(loadError?' 列表刷新失败，可点击刷新核对。':'');
+  $('editReason').textContent=reason;
+  $('editButton').disabled=!!operation||!loaded||!savedAssets.length;
+  $('editButton').textContent=operation==='submit'?'正在提交……':'开始剪辑';
+  $('files').disabled=!!operation||!loaded;
+  $('upload').hidden=!pendingFiles.length||operation==='upload';
+  $('upload').disabled=!!operation;
+  $('syncAssets').hidden=!loadError;
+  $('syncAssets').disabled=!!operation;
+  $('back').disabled=!!operation;
+  for(const id of ['tabProjects','tabCreate'])$(id).disabled=!!operation;
+  $('tabCurrent').disabled=!!operation||!current;
+}
+function showPage(name){
+  pageName=name;
+  for(const id of ['home','createPage','detail'])$(id).hidden=id!==name;
+  for(const [id,target] of [['tabProjects','home'],['tabCreate','createPage'],['tabCurrent','detail']]){
+    $(id).classList.toggle('active',name===target);$(id).setAttribute('aria-current',name===target?'page':'false');
+  }
+  updateControls();window.scrollTo({top:0});
+}
+async function api(url,options={}){
+  const r=await fetch(url,{credentials:'same-origin',...options});
+  if(r.status===401){$('login').hidden=false;for(const id of ['home','createPage','detail'])$(id).hidden=true;}
+  if(!r.ok){let d;try{d=await r.json()}catch{}throw Error(typeof d?.detail==='string'?d.detail:'请求未完成，请稍后重试')}
+  return r.json();
+}
+const post=(url,body)=>api(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+function guard(fn){return async e=>{e?.preventDefault();notice('');try{await fn(e)}catch(err){notice(err.message)}}}
+function uploadDate(value){
+  if(!value)return '<small>尚未上传</small>';
+  const d=new Date(value);return esc(d.toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'}))+'<small>'+esc(d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false}))+'</small>';
+}
+async function refreshHome(){
+  const data=await api('/api/projects');
+  $('projects').innerHTML=data.length?`<table class="project-table"><thead><tr><th>工程</th><th>状态</th><th>最近上传</th></tr></thead><tbody>${data.map(p=>`<tr><td><button class="project-open" data-project="${esc(p.id)}">${esc(p.title)}</button><small>${p.asset_count??p.assets.length} 条素材</small></td><td><span class="pill ${esc(p.status)}">${esc(p.status_label||'待剪辑')}</span></td><td>${uploadDate(p.uploaded_at)}</td></tr>`).join('')}</tbody></table>`:'<div class="card empty muted">还没有工程。点击底部“新建工程”开始。</div>';
+}
+async function home(){await refreshHome();$('login').hidden=true;showPage('home')}
+async function openProject(id){
+  current=id;loaded=false;savedAssets=[];pendingFiles=[];loadError='';$('uploadText').textContent='';$('files').value='';$('versions').innerHTML='';
+  showPage('detail');await refreshProject();
+}
+function elapsedText(seconds){const s=Math.max(0,Math.floor(seconds||0));return s<60?`${s}秒`:`${Math.floor(s/60)}分${s%60}秒`;}
+function estimateText(p){
+  if(!p.estimate_seconds)return p.estimate_note||'正在估算';
+  const [low,high]=p.estimate_seconds;
+  if(high<60)return `约 ${Math.ceil(low/10)*10}–${Math.ceil(high/10)*10} 秒`;
+  const a=Math.max(1,Math.ceil(low/60)),b=Math.max(a,Math.ceil(high/60));
+  return a===b?`约 ${a} 分钟`:`约 ${a}–${b} 分钟`;
+}
+function progressHtml(v){
+  const p=v.progress;if(!p)return '';
+  const descriptions={'等待开始':'等待前面的任务完成','读取工程素材':'准备本次选用的视频','采样素材画面':'提取画面，寻找合适片段','识别教学项目并去重':'识别动作，合并重复项目','复核选中动作区间':'检查名称和动作起止位置','渲染视频与字幕':'生成画面、字幕和声音，并检查视频','保存成片与剪辑记录':'保存视频和本版剪辑方案','成片已就绪':'可以播放或下载'};
+  const rows=p.steps.map((s,i)=>`<li class="${s.status}"><span class="step-dot">${s.status==='complete'?'✓':s.status==='failed'?'!':i+1}</span><div><strong>${esc(s.name)}</strong><small>${s.status==='current'?'正在进行 · ':s.status==='complete'?'已完成 · ':s.status==='failed'?'本步失败 · ':'接下来 · '}${esc(descriptions[s.name]||'')}</small></div></li>`).join('');
+  const body=`<p class="phase-heading">步骤进度：${p.completed} / ${p.total}</p><progress max="${p.total}" value="${p.completed}" aria-label="已完成的剪辑步骤"></progress><ol class="steps">${rows}</ol>`;
+  if(v.state==='ready')return `<details><summary>全部步骤已完成 · 用时 ${elapsedText(p.elapsed_seconds)}</summary>${body}</details>`;
+  const timing=v.state==='queued'?`已等待 ${elapsedText(p.elapsed_seconds)} · 前面还有 ${p.queue_ahead} 个任务`:v.state==='failed'?`处理用时 ${elapsedText(p.elapsed_seconds)}，任务已停止`:`已用 ${elapsedText(p.elapsed_seconds)}<br>预计剩余：${esc(estimateText(p))}`;
+  return `<div class="eta">${timing}${p.estimate_seconds?`<small style="display:block">${esc(p.estimate_note)}</small>`:''}</div>${body}`;
+}
+function versionHtml(v,i,total){return `<div class="row"><strong>${v.mode==='historical'?esc(v.feedback):'版本 '+(total-i)}</strong><span class="pill ${esc(v.state)}">${esc(v.stage||v.state)}</span></div><small>${esc(new Date(v.created_at).toLocaleString('zh-CN'))} · ${v.mode==='quick'?'快速拼接':v.mode==='historical'?'历史成片':'智能剪辑'}</small>${v.feedback?`<p>${esc(v.feedback)}</p>`:''}${progressHtml(v)}${v.state==='ready'?`<video controls playsinline preload="none" src="/api/versions/${esc(v.id)}/video"></video><div class="row"><a class="button" href="/api/versions/${esc(v.id)}/video?download=true">下载视频</a><a class="button secondary" target="_blank" rel="noopener" href="/api/versions/${esc(v.id)}/video">打开播放</a></div>`:v.state==='failed'?`<p class="error">${esc(v.error||'剪辑未完成，请重新提交')}</p>`:'<p class="muted">任务在后台继续，可以离开页面，稍后回来查看。</p>'}${v.summary?`<details><summary>剪辑说明与待核对项</summary><p>${esc(v.summary)}</p></details>`:''}<details><summary>本版规则</summary><pre>${esc(v.rules||'历史版本规则见原工程记录')}</pre></details>`;}
+async function refreshProject(){
+  if(!current)return;
+  const id=current,serial=++refreshSerial;
+  let p;
+  try{p=await api('/api/projects/'+id)}catch(e){if(id===current){loadError='素材状态读取失败，请点击“刷新素材状态”重试。';updateControls()}throw e;}
+  if(id!==current||serial!==refreshSerial)return;
+  loaded=true;loadError='';savedAssets=p.assets;
+  $('projectTitle').textContent=p.title;$('assetCount').textContent=`已保存 ${p.assets.length} 条素材`;
+  $('assets').innerHTML=p.assets.map(a=>`<li>${esc(a.name)} <small>${a.duration?Math.round(a.duration)+'秒':'历史素材'}</small></li>`).join('');
+  updateControls();
+  const list=$('versions');
+  if(!p.versions.length){list.innerHTML='<div class="card empty muted">素材准备好后，点击“开始剪辑”。</div>';return;}
+  list.querySelector('.empty')?.remove();
+  p.versions.forEach((v,i)=>{
+    let node=document.getElementById('version-'+v.id);
+    const sig=JSON.stringify([v.state,v.stage,v.updated_at,v.progress]);
+    if(!node){node=document.createElement('article');node.id='version-'+v.id;node.className='card';}
+    if(node.dataset.signature!==sig){node.innerHTML=versionHtml(v,i,p.versions.length);node.dataset.signature=sig;}
+    if(list.children[i]!==node)list.insertBefore(node,list.children[i]||null);
+  });
+}
+async function uploadPending(){
+  if(operation||!pendingFiles.length)return;
+  const projectId=current,total=pendingFiles.length;let done=0;
+  operation='upload';$('uploadProgress').hidden=false;
+  try{
+    while(pendingFiles.length){
+      const file=pendingFiles[0];$('uploadProgress').value=0;
+      uploadPhase=`正在上传第 ${done+1}/${total} 条：${file.name}。上传完成并保存后才能开始剪辑。`;
+      $('uploadText').textContent=uploadPhase;updateControls();
+      if(file.size>2*1024**3)throw Error(`${file.name} 超过2GB，请选择较小的视频。`);
+      const asset=await new Promise((resolve,reject)=>{
+        const xhr=new XMLHttpRequest();xhr.open('POST',`/api/projects/${projectId}/assets?filename=${encodeURIComponent(file.name)}`);
+        xhr.timeout=30*60*1000;
+        xhr.upload.onprogress=e=>{if(e.lengthComputable){
+          const percent=Math.round(e.loaded/e.total*100);$('uploadProgress').value=percent;
+          uploadPhase=percent===100?`${file.name} 已传输100%，正在校验并保存到工程，请稍候。`:`正在上传第 ${done+1}/${total} 条：${file.name} · ${percent}%`;
+          $('uploadText').textContent=uploadPhase;updateControls();
+        }};
+        xhr.onload=()=>{
+          if(xhr.status>=200&&xhr.status<300){try{resolve(JSON.parse(xhr.responseText))}catch{reject(Error('服务器未返回保存结果，请刷新素材状态后检查。'))}}
+          else{let msg='上传失败，请重试';try{const d=JSON.parse(xhr.responseText);if(typeof d.detail==='string')msg=d.detail}catch{}reject(Error(msg))}
+        };
+        xhr.onerror=()=>reject(Error('网络中断，尚未保存的素材可点击重试。'));
+        xhr.ontimeout=()=>reject(Error('上传等待超时，请刷新素材状态确认是否已保存，再重试未完成的视频。'));
+        xhr.onabort=()=>reject(Error('上传已中断，可重试未完成的视频。'));
+        xhr.send(file);
+      });
+      if(!savedAssets.some(a=>a.id===asset.id))savedAssets.push(asset);
+      loaded=true;pendingFiles.shift();done++;
+      $('assetCount').textContent=`已保存 ${savedAssets.length} 条素材`;
+    }
+    $('uploadText').textContent=`本次 ${done} 条素材已保存，可以开始剪辑。`;
+  }catch(e){$('uploadText').textContent=`${e.message} 本次已保存 ${done} 条，还有 ${pendingFiles.length} 条未完成。`;throw e;}
+  finally{
+    operation=null;uploadPhase='';$('uploadProgress').hidden=true;updateControls();
+    try{await refreshProject()}catch{updateControls();}
+  }
+}
+$('loginForm').onsubmit=guard(async()=>{await post('/api/login',{key:$('key').value});$('key').value='';await home()});
+$('createForm').onsubmit=guard(async()=>{const p=await post('/api/projects',{title:$('title').value});$('title').value='';await openProject(p.id)});
+$('projects').onclick=guard(async e=>{const b=e.target.closest('[data-project]');if(b)await openProject(b.dataset.project)});
+$('back').onclick=guard(home);$('refresh').onclick=guard(refreshHome);
+$('tabProjects').onclick=guard(home);$('tabCreate').onclick=guard(async()=>showPage('createPage'));
+$('tabCurrent').onclick=guard(async()=>{showPage('detail');await refreshProject()});
+$('syncAssets').onclick=guard(refreshProject);
+$('files').onchange=guard(async()=>{pendingFiles=[...$('files').files];$('files').value='';await uploadPending()});
+$('upload').onclick=guard(uploadPending);
+$('editForm').onsubmit=guard(async()=>{
+  if(operation||!loaded||!savedAssets.length){updateControls();return;}
+  operation='submit';updateControls();
+  try{
+    await post(`/api/projects/${current}/edits`,{request_id:crypto.randomUUID(),feedback:$('feedback').value,mode:$('mode').value,audio:$('audio').value,lesson_count:$('lessons').value?Number($('lessons').value):null});
+    await refreshProject();$('versions').scrollIntoView({behavior:'smooth'});
+  }finally{operation=null;updateControls();}
+});
+setInterval(()=>{if(operation||document.hidden||!$('login').hidden)return;
+  (pageName==='detail'?refreshProject():pageName==='home'?refreshHome():Promise.resolve()).catch(e=>notice(e.message));
+},7000);
+home().catch(e=>{if(!$('login').hidden)notice('');else notice(e.message)});
+</script></html>

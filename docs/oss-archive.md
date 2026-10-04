@@ -66,3 +66,7 @@ uv run --extra delivery --with /path/to/video-2022/cli python scripts/archive_ba
 ## 历史缺口
 
 当前能定位v4、v5、v6及2026-09-16早期成片；v2、v3在本机交付目录与专用OSS未找到，待从历史工作机或点播平台恢复。早期成片没有可恢复的原方案，不能伪造版本号与完整工程。具体本轮验证结果见迭代记录。
+
+## 2026-09-19 手机工作室新工程
+
+手机新建工程使用`projects/YYYYMMDD-HHMMSS-随机ID/`；原素材在`assets/素材ID/`，每次剪辑在`versions/任务ID/attempt-租约ID/`。成片、方案、质量报告、提示词和本轮请求一起保存。历史批次继续用原`batches/`前缀，不搬移、不覆盖。手机播放/下载使用私有短时签名；详见[手机工作室交代](handoff-mobile-workspace.md)。旧归档脚本仍只处理batches，手机服务直接通过存储适配器处理projects。

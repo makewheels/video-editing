@@ -113,6 +113,8 @@ def caption_spans(plan: Plan, coverage: list[dict]) -> list[dict]:
     """Keep equal adjacent labels on screen continuously; previews remain opt-in."""
     contents = {c.id: c for c in plan.contents}
     spans = []
+    content_numbers = {key: i + 1 for i, key in enumerate(dict.fromkeys(
+        clip.content_id for clip in plan.clips))}
 
     def append(start, end, label, tag, position, merge_gap=0):
         style = {"label": label, "tag": tag, "position": position}
@@ -130,9 +132,11 @@ def caption_spans(plan: Plan, coverage: list[dict]) -> list[dict]:
         tag = CATEGORIES[content.category] if plan.output.caption_style == "card" else ""
         merge_gap = plan.clips[index - 1].transition_out if index else 0
         label = content.label
-        if plan.output.number_clips and plan.output.caption_style != "badge":
+        if plan.output.number_contents:
+            label = f"{content_numbers[clip.content_id]:02d}  {label}"
+        elif plan.output.number_clips and plan.output.caption_style != "badge":
             label = f"{index + 1:02d}  {label}"
-        if plan.output.number_clips or plan.output.motion_style != "none":
+        if plan.output.number_contents or plan.output.number_clips or plan.output.motion_style != "none":
             spans.append({"start": start, "end": end - advance, "label": label,
                           "tag": tag, "position": clip.caption_position,
                           "sequence": f"{index + 1:02d} / {len(plan.clips):02d}"

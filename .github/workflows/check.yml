@@ -20,7 +20,7 @@ jobs:
           python-version: '3.12'
       - name: 安装系统媒体工具和中文字体
         run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-noto-cjk
-      - run: uv sync --locked
+      - run: uv sync --locked --extra server
       - run: uv run ruff check --no-cache .
       - run: uv run editing doctor
       - run: uv run pytest

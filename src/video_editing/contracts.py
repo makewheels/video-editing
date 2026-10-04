@@ -88,6 +88,7 @@ class Output(Contract):
     caption_style: Literal["card", "plain", "badge"] = "card"
     encoding_profile: Literal["high_quality", "compact"] = "high_quality"
     number_clips: bool = False
+    number_contents: bool = False
     motion_style: Literal["none", "energetic"] = "none"
 
     @model_validator(mode="after")

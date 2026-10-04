@@ -1,0 +1,23 @@
+[Unit]
+Description=Private video editing workspace
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=video-editing
+Group=video-editing
+WorkingDirectory=/opt/video-editing/app
+EnvironmentFile=/opt/video-editing/runtime.env
+Environment=PATH=/opt/video-editing/app/.venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/opt/video-editing/app/.venv/bin/uvicorn video_editing.server.app:app --host ${EDITING_BIND_HOST} --port 8070 --proxy-headers --forwarded-allow-ips=${EDITING_TRUSTED_PROXY}
+Restart=always
+RestartSec=5
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/video-editing
+MemoryMax=1G
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
