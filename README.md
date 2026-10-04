@@ -2,6 +2,8 @@
 
 # Video Editing
 
+> 新增长期目标：从用户亲自完成的剪映工程学习可复用的剪法，以后上传新素材即可按历史风格自主剪辑。目标、证据要求和交付物见 [历史剪法学习目标](docs/style-learning-goal.md)；目前仍待观看代表工程，不能把草稿目录当作风格分析结果。
+
 > [2026-09-19账号增长报告](https://production-bucket.oss.aliyun.a4.fit/reports/temporary/swimming-account/20260919-071300/index.html)已发布：4类样本内容、3个教学账号对照、12个拍摄选题与可复制提示词。[阶段进度](docs/task-2026-09-19-account-growth.md)记录证据与未完成项。
 
 > 长期交付要求：每批素材用含日期时分秒的独立OSS目录；同批所有版本与每轮提示词调教记录都归档。见[存储位置与执行规则](docs/oss-archive.md)。点播交付不能替代剪辑OSS归档。
@@ -63,6 +65,7 @@ uv run pytest
 | 文档 | 内容 |
 | --- | --- |
 | [需求基线](docs/requirements.md) | 已确认目标、用户最新反馈、未决问题 |
+| [历史剪法学习目标](docs/style-learning-goal.md) | 从剪映代表工程学习剪法、形成可执行风格并用新素材验收 |
 | [架构与数据归属](docs/architecture.md) | 独立剪辑平台与已有点播平台的边界 |
 | [服务端实施设计](docs/execution-design.md) | 任务包、状态机、版本、租约、手机 API 与验收 |
 | [工具链](docs/toolchain.md) | FFmpeg 之外需要什么；必需、下一步与可选能力 |
